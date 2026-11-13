@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101827">
-<title>MediaShare — Share media privately</title>
+<title>MediaShare — Share files privately</title>
 <link rel="stylesheet" href="/styles.css">
 
 <style>
@@ -63,8 +63,8 @@
 <a class="brand" href="/">MediaShare<span>.</span></a>
 <div class="hero-copy">
 <div class="eyebrow">PRIVATE · SIMPLE · TEMPORARY</div>
-<h1>Your moments,<br><span>shared securely.</span></h1>
-<p class="muted">Upload a photo or video, protect it with a password, and share a link that expires automatically.</p>
+<h1>Your files,<br><span>shared securely.</span></h1>
+<p class="muted">Choose files from your device, protect them with a password, and share a link that expires automatically.</p>
 </div>
 </section>
 
@@ -72,7 +72,7 @@
 <div class="panel-heading">
 <div>
 <div class="eyebrow">CREATE A SHARE LINK</div>
-<h2>Upload your media</h2>
+<h2>Upload your files</h2>
 </div>
 <div class="file-icon">↥</div>
 </div>
@@ -81,9 +81,16 @@
 
 <label class="dropzone" for="media">
 <div class="upload-symbol">＋</div>
-<strong id="fileLabel">Choose a photo or video</strong>
-<span class="muted small" id="fileHint">JPG, PNG, GIF, WEBP, MP4, MOV, MKV, WEBM · Up to 5 GB</span>
-<input id="media" name="media" type="file" accept="image/*,video/*" required>
+<strong id="fileLabel">Choose files from your device</strong>
+<span class="muted small" id="fileHint">Browse photos, videos, ZIP files and other locations · Up to 5 GB</span>
+
+<input
+  id="media"
+  name="media"
+  type="file"
+  accept="*/*"
+  required
+>
 </label>
 
 <label for="linkName">CUSTOM LINK NAME</label>
@@ -99,7 +106,7 @@
 
 <div class="security-note">
 <span>🔒</span>
-<span>Only people with your link <b>and password</b> can access the media.</span>
+<span>Only people with your link <b>and password</b> can access the file.</span>
 </div>
 
 <button class="button full" type="submit" id="submitButton">
@@ -133,7 +140,7 @@ Upload &amp; create private link <span>→</span>
 <div>
 <span>02</span>
 <b>View &amp; download</b>
-<small>Preview in browser or save</small>
+<small>Preview supported media or download</small>
 </div>
 <div>
 <span>03</span>
@@ -142,7 +149,7 @@ Upload &amp; create private link <span>→</span>
 </div>
 </section>
 
-<footer>MediaShare · Private, temporary media sharing</footer>
+<footer>MediaShare · Private, temporary file sharing</footer>
 </main>
 
 <script>
@@ -161,6 +168,7 @@ const progressStatus = document.getElementById("progressStatus");
 
 function formatSize(bytes) {
   if (bytes < 1024) return bytes + " B";
+
   const units = ["KB", "MB", "GB", "TB"];
   let size = bytes / 1024;
   let index = 0;
@@ -178,11 +186,11 @@ input.addEventListener("change", () => {
 
   label.textContent = file
     ? file.name
-    : "Choose a photo or video";
+    : "Choose files from your device";
 
   hint.textContent = file
     ? formatSize(file.size) + " selected"
-    : "JPG, PNG, GIF, WEBP, MP4, MOV, MKV, WEBM · Up to 5 GB";
+    : "Browse photos, videos, ZIP files and other locations · Up to 5 GB";
 });
 
 linkName.addEventListener("input", () => {
