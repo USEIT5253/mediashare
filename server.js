@@ -49,7 +49,7 @@ const storage = multer.diskStorage({
   }
 });
 
-// Updated upload filter: accepts image/* and video/* MIME types.
+// Accept images, videos, and ZIP files
 const upload = multer({
   storage,
   limits: {
@@ -61,10 +61,12 @@ const upload = multer({
 
     const allowed =
       mime.startsWith("image/") ||
-      mime.startsWith("video/");
+      mime.startsWith("video/") ||
+      mime === "application/zip" ||
+      mime === "application/x-zip-compressed";
 
     cb(
-      allowed ? null : new Error("Please select an image or video file."),
+      allowed ? null : new Error("Please select an image, video, or ZIP file."),
       allowed
     );
   }
@@ -147,7 +149,7 @@ app.post("/upload", (req, res, next) => {
 }, (req, res) => {
   if (!req.file) {
     return res.status(400).send(
-      errorPage("Choose a photo or video first.")
+      errorPage("Choose a photo, video, or ZIP file first.")
     );
   }
 
@@ -408,7 +410,9 @@ function fmt(n) {
 function mediaPage(m) {
   const preview = m.mimeType.startsWith("image/")
     ? `<img class="preview" src="/share/${m.id}/view" alt="${esc(m.originalName)}">`
-    : `<video class="preview" src="/share/${m.id}/view" controls playsinline preload="metadata"></video>`;
+    : m.mimeType.startsWith("video/")
+      ? `<video class="preview" src="/share/${m.id}/view" controls playsinline preload="metadata"></video>`
+      : `<p class="muted">This file cannot be previewed here. Use the download button below.</p>`;
 
   const mins = Math.ceil(
     Math.max(0, m.expiresAt - Date.now()) / 60000
@@ -418,7 +422,7 @@ function mediaPage(m) {
 <section class="panel">
 <a class="brand" href="/">MediaShare<span>.</span></a>
 <div class="success">✓ Password accepted</div>
-<h1>Your media is ready</h1>
+<h1>Your file is ready</h1>
 <p class="filename">${esc(m.originalName)}</p>
 ${preview}
 <div class="details">
