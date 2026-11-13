@@ -1,20 +1,297 @@
+
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>MediaShare — Share media privately</title><link rel="stylesheet" href="/styles.css"></head>
-<body><main class="shell">
-<section class="hero"><a class="brand" href="/">MediaShare<span>.</span></a><div class="hero-copy"><div class="eyebrow">PRIVATE · SIMPLE · TEMPORARY</div><h1>Your moments,<br><span>shared securely.</span></h1><p class="muted">Upload a photo or video, protect it with a password, and share a link that expires automatically.</p></div></section>
-<section class="panel upload-panel"><div class="panel-heading"><div><div class="eyebrow">CREATE A SHARE LINK</div><h2>Upload your media</h2></div><div class="file-icon">↥</div></div>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>MediaShare — Share media privately</title>
+<link rel="stylesheet" href="/styles.css">
+
+<style>
+.upload-progress {
+  display: none;
+  margin-top: 20px;
+  padding: 16px;
+  background: #f1f5f9;
+  border-radius: 12px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.progress-track {
+  height: 12px;
+  background: #dbe3ed;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #16a34a;
+  border-radius: 20px;
+  transition: width .2s ease;
+}
+
+.progress-status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.progress-error {
+  color: #dc2626;
+}
+
+.progress-success {
+  color: #15803d;
+}
+</style>
+</head>
+
+<body>
+<main class="shell">
+
+<section class="hero">
+<a class="brand" href="/">MediaShare<span>.</span></a>
+<div class="hero-copy">
+<div class="eyebrow">PRIVATE · SIMPLE · TEMPORARY</div>
+<h1>Your moments,<br><span>shared securely.</span></h1>
+<p class="muted">Upload a photo or video, protect it with a password, and share a link that expires automatically.</p>
+</div>
+</section>
+
+<section class="panel upload-panel">
+<div class="panel-heading">
+<div>
+<div class="eyebrow">CREATE A SHARE LINK</div>
+<h2>Upload your media</h2>
+</div>
+<div class="file-icon">↥</div>
+</div>
+
 <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
-<label class="dropzone" for="media"><div class="upload-symbol">＋</div><strong id="fileLabel">Choose a photo or video</strong><span class="muted small" id="fileHint">JPG, PNG, GIF, WEBP, MP4, MOV, WEBM · Up to 5 GB</span><input id="media" name="media" type="file" accept="image/*,video/*" required></label>
-<label for="linkName">CUSTOM LINK NAME</label><div class="slug-input"><span>/share/</span><input id="linkName" name="linkName" type="text" minlength="3" maxlength="40" pattern="[A-Za-z0-9 -]+" placeholder="e.g. birthday-party" required autocomplete="off"></div><p class="small muted slug-help">Your link will end with this name. Use a unique name; spaces become hyphens.</p>
-<label for="password">Create a password</label><input id="password" name="password" type="password" minlength="4" maxlength="128" placeholder="At least 4 characters" required autocomplete="new-password">
-<div class="security-note"><span>🔒</span><span>Only people with your link <b>and password</b> can access the media.</span></div>
-<button class="button full" type="submit" id="submitButton">Upload &amp; create private link <span>→</span></button><p class="small muted center">Your file is stored on this computer and deleted after 5 hours.</p>
-</form></section>
-<section class="feature-row"><div><span>01</span><b>Password protected</b><small>Private access to every share</small></div><div><span>02</span><b>View &amp; download</b><small>Preview in browser or save</small></div><div><span>03</span><b>Auto expires</b><small>Removed after five hours</small></div></section>
-<footer>MediaShare · Your files stay on your computer</footer></main>
+
+<label class="dropzone" for="media">
+<div class="upload-symbol">＋</div>
+<strong id="fileLabel">Choose a photo or video</strong>
+<span class="muted small" id="fileHint">JPG, PNG, GIF, WEBP, MP4, MOV, MKV, WEBM · Up to 5 GB</span>
+<input id="media" name="media" type="file" accept="image/*,video/*" required>
+</label>
+
+<label for="linkName">CUSTOM LINK NAME</label>
+<div class="slug-input">
+<span>/share/</span>
+<input id="linkName" name="linkName" type="text" minlength="3" maxlength="40" pattern="[A-Za-z0-9 -]+" placeholder="e.g. birthday-party" required autocomplete="off">
+</div>
+
+<p class="small muted slug-help">Your link will end with this name. Use a unique name; spaces become hyphens.</p>
+
+<label for="password">Create a password</label>
+<input id="password" name="password" type="password" minlength="4" maxlength="128" placeholder="At least 4 characters" required autocomplete="new-password">
+
+<div class="security-note">
+<span>🔒</span>
+<span>Only people with your link <b>and password</b> can access the media.</span>
+</div>
+
+<button class="button full" type="submit" id="submitButton">
+Upload &amp; create private link <span>→</span>
+</button>
+
+<div class="upload-progress" id="uploadProgress" aria-live="polite">
+<div class="progress-info">
+<strong id="progressLabel">Uploading...</strong>
+<strong id="progressPercent">0%</strong>
+</div>
+
+<div class="progress-track">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+
+<div class="progress-status" id="progressStatus">Preparing upload...</div>
+</div>
+
+<p class="small muted center">Your file is stored by the hosting service and intended to be deleted after 5 hours.</p>
+
+</form>
+</section>
+
+<section class="feature-row">
+<div>
+<span>01</span>
+<b>Password protected</b>
+<small>Private access to every share</small>
+</div>
+<div>
+<span>02</span>
+<b>View &amp; download</b>
+<small>Preview in browser or save</small>
+</div>
+<div>
+<span>03</span>
+<b>Auto expires</b>
+<small>Removed after five hours</small>
+</div>
+</section>
+
+<footer>MediaShare · Private, temporary media sharing</footer>
+</main>
+
 <script>
-const input=document.getElementById("media"), label=document.getElementById("fileLabel"), hint=document.getElementById("fileHint"), form=document.getElementById("uploadForm"), button=document.getElementById("submitButton"), linkName=document.getElementById("linkName");
-input.addEventListener("change",()=>{const f=input.files[0];label.textContent=f?f.name:"Choose a photo or video";hint.textContent=f?`${(f.size/1024**3).toFixed(2)} GB selected`:"JPG, PNG, GIF, WEBP, MP4, MOV, WEBM · Up to 5 GB";});
-linkName.addEventListener("input",()=>{linkName.value=linkName.value.toLowerCase().replace(/[^a-z0-9 -]/g,"").replace(/\\s+/g,"-").replace(/-+/g,"-").slice(0,40);});
-form.addEventListener("submit",()=>{button.disabled=true;button.textContent="Uploading… please keep this page open";});
-</script></body></html>
+const input = document.getElementById("media");
+const label = document.getElementById("fileLabel");
+const hint = document.getElementById("fileHint");
+const form = document.getElementById("uploadForm");
+const button = document.getElementById("submitButton");
+const linkName = document.getElementById("linkName");
+
+const progressBox = document.getElementById("uploadProgress");
+const progressFill = document.getElementById("progressFill");
+const progressPercent = document.getElementById("progressPercent");
+const progressLabel = document.getElementById("progressLabel");
+const progressStatus = document.getElementById("progressStatus");
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  const units = ["KB", "MB", "GB", "TB"];
+  let size = bytes / 1024;
+  let index = 0;
+
+  while (size >= 1024 && index < units.length - 1) {
+    size /= 1024;
+    index++;
+  }
+
+  return size.toFixed(2) + " " + units[index];
+}
+
+input.addEventListener("change", () => {
+  const file = input.files[0];
+
+  label.textContent = file
+    ? file.name
+    : "Choose a photo or video";
+
+  hint.textContent = file
+    ? formatSize(file.size) + " selected"
+    : "JPG, PNG, GIF, WEBP, MP4, MOV, MKV, WEBM · Up to 5 GB";
+});
+
+linkName.addEventListener("input", () => {
+  linkName.value = linkName.value
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 40);
+});
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  if (!form.reportValidity()) return;
+
+  const file = input.files[0];
+
+  if (!file) return;
+
+  const xhr = new XMLHttpRequest();
+  const data = new FormData(form);
+
+  button.disabled = true;
+  button.textContent = "Uploading...";
+
+  progressBox.style.display = "block";
+  progressFill.style.width = "0%";
+  progressPercent.textContent = "0%";
+  progressLabel.textContent = "Uploading " + file.name;
+  progressStatus.textContent = "Preparing upload...";
+  progressStatus.className = "progress-status";
+
+  xhr.open("POST", "/upload", true);
+
+  xhr.upload.addEventListener("progress", (event) => {
+    if (!event.lengthComputable) {
+      progressStatus.textContent =
+        "Uploading... calculating progress";
+      return;
+    }
+
+    const percent = Math.round(
+      (event.loaded / event.total) * 100
+    );
+
+    progressFill.style.width = percent + "%";
+    progressPercent.textContent = percent + "%";
+
+    progressStatus.textContent =
+      formatSize(event.loaded) + " of " +
+      formatSize(event.total) + " uploaded";
+  });
+
+  xhr.addEventListener("load", () => {
+    if (xhr.status >= 200 && xhr.status < 400) {
+      const finalUrl = xhr.responseURL || "";
+
+      if (finalUrl.includes("/share/")) {
+        progressFill.style.width = "100%";
+        progressPercent.textContent = "100%";
+        progressLabel.textContent = "Upload completed!";
+        progressStatus.textContent = "Opening your private share link...";
+        progressStatus.className =
+          "progress-status progress-success";
+
+        window.location.href = finalUrl;
+        return;
+      }
+
+      progressLabel.textContent = "Upload failed";
+      progressStatus.textContent =
+        "The server did not create your share link. Please try again.";
+      progressStatus.className =
+        "progress-status progress-error";
+
+    } else {
+      progressLabel.textContent = "Upload failed";
+      progressStatus.textContent =
+        "Server error (" + xhr.status + "). Please try again.";
+      progressStatus.className =
+        "progress-status progress-error";
+    }
+
+    button.disabled = false;
+    button.textContent = "Upload & create private link →";
+  });
+
+  xhr.addEventListener("error", () => {
+    progressLabel.textContent = "Connection error";
+    progressStatus.textContent =
+      "Internet connection interrupted. Please try again.";
+    progressStatus.className =
+      "progress-status progress-error";
+
+    button.disabled = false;
+    button.textContent = "Upload & create private link →";
+  });
+
+  xhr.addEventListener("abort", () => {
+    progressLabel.textContent = "Upload cancelled";
+    progressStatus.textContent = "Please try again.";
+    button.disabled = false;
+    button.textContent = "Upload & create private link →";
+  });
+
+  xhr.send(data);
+});
+</script>
+
+</body>
+</html>
